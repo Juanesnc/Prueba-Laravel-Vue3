@@ -45,8 +45,6 @@ class AuthController extends Controller
             $user->token = $token;
             $user->save();
 
-            Log::info($user);
-
             if (!$token) {
                 return response()->json([
                     'status' => false,

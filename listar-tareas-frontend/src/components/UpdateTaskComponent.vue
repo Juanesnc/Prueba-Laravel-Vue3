@@ -6,12 +6,22 @@
                 <div class="form-group">
                     <label for="exampleInputName">Task Name</label>
                     <input type="text" class="form-control" id="exampleInputName" aria-describedby="nameHelp"
-                        :placeholder="task.name" v-model="name">
+                        :placeholder="task.name" v-model="title">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputName">Task Name</label>
+                    <input type="text" class="form-control" aria-describedby="nameHelp"
+                        placeholder="Enter name" v-model="description">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputName">Task Name</label>
+                    <input type="date" class="form-control" aria-describedby="nameHelp"
+                        placeholder="Enter name" v-model="due_date">
                 </div>
                 <div class="form-group">
                     <label for="exampleInputResponsible">responsible</label>
-                    <select v-model="responsible" class="form-control">
-                        <option v-for="user in users" :key="user.is" :value="user.name">{{ user.name }}</option>
+                    <select v-model="selectedCompany" class="form-control">
+                        <option v-for="company in companies" :key="company.id" :value="company.name">{{ company.name }}</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -23,7 +33,7 @@
                         </select>
                 </div>
                 <button type="submit" class="btn btn-primary"
-                    @click.prevent="updateTask(taskId, task.name, task.responsible, task.status)">Submit</button>
+                    @click.prevent="updateTask(taskId, task.title, task.description, task.due_date, task.company, task.status)">Submit</button>
                 <p class="feedback">{{ feedback }}</p>
             </form>
         </div>
@@ -35,10 +45,13 @@ import { ref, defineProps, defineEmits, onMounted } from 'vue';
 import useAuth from '@/store/auth';
 
 const store = useAuth();
-const name = ref('');
-const responsible = ref('');
+const title = ref('');
+const description = ref(''); 
+const due_date = ref('');
+const selectedCompany = ref('');
+const companies = ref([]);
+const idCompany = ref('');
 const status = ref('');
-const users = ref([]);
 const feedback = ref('');
 
 // eslint-disable-next-line no-unused-vars
@@ -60,19 +73,27 @@ const close = () => {
     emits('update')
 }
 
-const updateTask = async (taskId, nameUpdate, responsibleUpdate, statusUpdate) => {
+const updateTask = async (taskId, titleUpdate, descriptionUpdate, due_dateUpdate, companyUpdate, statusUpdate) => {
 
-    if (name.value === '') {
-        name.value = nameUpdate
+    if (title.value === '') {
+        title.value = titleUpdate
     }
-    if (responsible.value === '') {
-        responsible.value = responsibleUpdate
+    if (description.value === '') {
+        description.value = descriptionUpdate
+    }
+    if (due_date.value === '') {
+        due_date.value = due_dateUpdate
+    }
+    if (selectedCompany.value !== '') {
+        idCompany.value = await store.getCompanyId(selectedCompany.value)
+    } else {
+        idCompany.value = companyUpdate
     }
     if (status.value === '') {
         status.value = statusUpdate
     }
 
-    const response = await store.updateTask(taskId, name.value, responsible.value, status.value)
+    const response = await store.updateTask(taskId, title.value, description.value, due_date.value, idCompany.value.id, status.value)
 
     if (response == false) {
         feedback.value = 'Update error'
@@ -82,7 +103,7 @@ const updateTask = async (taskId, nameUpdate, responsibleUpdate, statusUpdate) =
 }
 
 onMounted(async () => {
-   users.value = await store.fetchUsers()
+    companies.value = await store.fetchCompanies()
 });
 </script>
 

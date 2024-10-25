@@ -29,7 +29,6 @@ const useAuth = defineStore('auth', {
                 })
 
                 const response = await rawResponse.json()
-                console.log(response);
                 this.user = response.user.id
 
                 if (response.status == false) {
@@ -120,7 +119,6 @@ const useAuth = defineStore('auth', {
             return response
         },
         async createTask(title, description, due_date, company_id) {
-            console.log(company_id)
             const uri = `${this.baseURL}/task`
             const rawResponse = await fetch(uri, {
                 method: 'POST',
@@ -143,7 +141,7 @@ const useAuth = defineStore('auth', {
                 return true
             }
         },
-        async updateTask(TaskId, Nombre, Responsable, status) {
+        async updateTask(TaskId, title, description, due_date, company_id, status) {
             const uri = `${this.baseURL}/task/${TaskId}`
             const rawResponse = await fetch(uri, {
                 method: 'PUT',
@@ -155,8 +153,10 @@ const useAuth = defineStore('auth', {
                 body: JSON.stringify({
                     "id": TaskId,
                     'user_id': this.user,
-                    'name': Nombre,
-                    'responsible': Responsable,
+                    'title': title,
+                    'description': description,
+                    'due_date': due_date,
+                    'company_id': company_id,
                     'status': status
                 })
             })

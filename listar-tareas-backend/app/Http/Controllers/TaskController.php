@@ -37,7 +37,6 @@ class TaskController extends Controller
     public function store(Request $request)
     {
 
-        Log::info($request);
         $uuid = Str::uuid();
 
         $task = new Task;
@@ -80,6 +79,7 @@ class TaskController extends Controller
         $task->title = $request->title;
         $task->description = $request->description;
         $task->company_id = $request->company_id;
+        $task->due_date = $request->due_date;
         $task->status = $request->status;
         $task->updated_at = now();
         $task->save();

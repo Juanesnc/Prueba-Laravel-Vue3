@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description');
             $table->enum('status', ['pending', 'in_progress', 'finalized']);
             $table->timestamp('due_date')->nullable();
-            $table->unsignedBigInteger('company_id');
+            $table->uuid('company_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
             $table->softDeletes();

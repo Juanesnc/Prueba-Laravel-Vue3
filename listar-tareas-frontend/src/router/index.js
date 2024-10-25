@@ -38,21 +38,22 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuth()
-  const isAuth = auth.token
-  const param = to.params.id
+  const isAuth = !!auth.token
 
-  if(from.name == 'login' && to.params.id){
-    localStorage.setItem('saveParam', param)
-  }
-
-  if((to.meta.requireAuth) && (isAuth == null)){
+  if(to.meta.requireAuth && !isAuth){
     next({name: 'login'})
-  } if (((to.name == 'login') || to.params.id !== localStorage.getItem('saveParam'))  && (isAuth) ){
-    next({path: `/tasks/${localStorage.getItem('saveParam')}`})
-  } else {
-    next()
   }
 
+  if((to.name === 'login' || to.name === 'register') && isAuth){
+    const savedParam = localStorage.getItem('saveParam')
+    next({path: `/tasks/${savedParam}`})
+  }
+
+  if(to.name === 'tasks' && to.params.id !== localStorage.getItem('savedParam')){
+    localStorage.setItem('saveParam', to.params.id)
+  }
+
+  next()
 })
 
 export default router
