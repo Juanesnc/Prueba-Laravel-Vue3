@@ -15,7 +15,7 @@ class TaskController extends Controller
     
     public function index($id, Request $request)
     {
-        $query = Task::where('user_id', $id)->where('soft_delete', 0);
+        $query = Task::with('company')->where('user_id', $id)->where('soft_delete', 0);
 
         if($request->filled('name')){
             $query->where('name', 'like', '%' . $request->input('name') . '%');

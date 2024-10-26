@@ -1,11 +1,11 @@
 <template>
-    <v-dialog v-model="isDialogOpen" persistent>
+    <v-dialog class="container" v-model="isDialogOpen" persistent>
         <v-card>
             <v-card-title>
                 <h1 class="modal-title">Create</h1>
             </v-card-title>
             <v-card-text>
-                <v-form ref="form" v-model="valid">
+                <v-form ref="form" v-model="valid" lazy-validation>
                     <v-text-field v-model="title" label="Task Title" placeholder="Enter task name"
                         :rules="[v => !!v || 'Task name is required']"></v-text-field>
 
@@ -16,10 +16,17 @@
                         :rules="[v => !!v || 'Due date is required']"></v-text-field>
 
                     <v-select v-model="selectedCompany" :items="cleanCompanies" label="Responsible"
-                        placeholder="Select a company"></v-select>
+                        placeholder="Select a company" :rules="[v => !!v || 'A company must be selected']"></v-select>
                 </v-form>
-                <v-btn type="submit" class="primary" @click.prevent="createTask">Submit</v-btn>
-                <v-btn text @click="close">Cancel</v-btn>
+                <v-row>
+                    <v-col cols="12" md="6">
+                        <v-btn type="submit" class="primary" @click.prevent="createTask"
+                            style="width: 100%;">Submit</v-btn>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-btn text @click="close" style="width: 100%;">Cancel</v-btn>
+                    </v-col>
+                </v-row>
                 <p class="feedback">{{ feedback }}</p>
             </v-card-text>
         </v-card>
@@ -37,6 +44,7 @@ const due_date = ref('');
 const selectedCompany = ref('');
 const feedback = ref('');
 const companies = ref([]);
+const valid = ref(false);
 const isDialogOpen = ref(true);
 
 const emits = defineEmits(['close', 'update'])
@@ -48,6 +56,12 @@ const close = () => {
 }
 
 const createTask = async () => {
+    feedback.value = ''
+
+    if (!valid.value) {
+        feedback.value = 'Please fill all required fields'
+        return
+    }
     const idCompany = await store.getCompanyId(selectedCompany.value)
     const response = await store.createTask(title.value, description.value, due_date.value, idCompany.id)
     if (response == false) {
@@ -69,6 +83,14 @@ const cleanCompanies = computed(() => companies.value.map(company => company.nam
 </script>
 
 <style scoped lang="scss">
+.container {
+    width: 500px;
+
+    @media only screen and (max-width: 530px) {
+        max-width: 100%;
+    }
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;

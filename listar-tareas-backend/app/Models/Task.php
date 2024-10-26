@@ -12,4 +12,8 @@ class Task extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $guarded = [];
+
+    public function company(){
+        return $this->belongsTo(Company::class, 'company_id');
+    }
 }

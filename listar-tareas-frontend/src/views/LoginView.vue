@@ -3,10 +3,12 @@
     <v-row justify="center" align="center" style="height: 100vh;">
       <v-col cols="12" sm="6">
         <div class="modal-text">
-            <h1 class="title">Login</h1>
-          <v-form @submit.prevent="loginUser">
-            <v-text-field v-model="email" label="Email address" placeholder="Enter email" outlined></v-text-field>
-            <v-text-field v-model="password" label="Password" placeholder="Enter password" outlined></v-text-field>
+          <h1 class="title">Login</h1>
+          <v-form v-model="valid" @submit.prevent="loginUser">
+            <v-text-field v-model="email" label="Email address" placeholder="Enter email" outlined
+              :rules="[v => !!v || 'Email is required']"></v-text-field>
+            <v-text-field v-model="password" label="Password" placeholder="Enter password" outlined
+              :rules="[v => !!v || 'Password is required']" type="password"></v-text-field>
             <v-btn type="submit">Submit</v-btn>
             <p class="message-error">{{ feedback }}</p>
           </v-form>
@@ -20,19 +22,33 @@
 import { ref } from 'vue';
 import useAuth from '@/store/auth';
 import router from '@/router';
+import Swal from 'sweetalert2';
 
 const store = useAuth();
 const email = ref('');
 const password = ref('');
 const userId = ref('');
 const feedback = ref('');
+const valid = ref(false);
 
 const loginUser = async () => {
+  feedback.value = ''
+
   try {
+    if (!valid.value) {
+      return
+    }
     const response = await store.login(email.value, password.value)
     if (response == false) {
       feedback.value = 'Login error'
     } else {
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "successful login",
+        showConfirmButton: false,
+        timer: 1500
+      });
       userId.value = await store.getUserId();
       router.push({ name: 'tasks', params: { id: userId.value } })
     }
@@ -54,7 +70,7 @@ const loginUser = async () => {
   margin: auto;
   min-width: 300px;
   cursor: default;
-  filter:drop-shadow(2px 2px 20px rgb(61, 60, 60));
+  filter: drop-shadow(2px 2px 20px rgb(61, 60, 60));
 }
 
 .register-section {

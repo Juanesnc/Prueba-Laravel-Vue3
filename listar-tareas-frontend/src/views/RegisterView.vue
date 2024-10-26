@@ -4,12 +4,12 @@
       <v-col cols="12" sm="6">
         <div class="modal-text">
           <h1 class="title">Register</h1>
-          <v-form @submit.prevent="createUser">
-            <v-text-field v-model="name" label="User name" placeholder="Enter user name" requied outlined>
+          <v-form v-model="valid" @submit.prevent="createUser">
+            <v-text-field v-model="name" label="User name" placeholder="Enter user name" requied outlined :rules="[v => !!v || 'Name is required']">
             </v-text-field>
-            <v-text-field v-model="email" label="Email address" placeholder="Enter email"  required>
+            <v-text-field v-model="email" label="Email address" placeholder="Enter email"  required outlined :rules="[v => !!v || 'Email is required']">
             </v-text-field>
-            <v-text-field v-model="password" label="Password" placeholder="Password" required>
+            <v-text-field v-model="password" label="Password" placeholder="Password" required outlined :rules="[v => !!v || 'Password is required']" type="password">
             </v-text-field>
             <v-btn type="submit">Submit</v-btn>
             <p class="message-error">{{ feedback }}</p>
@@ -21,17 +21,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import useAuth from '@/store/auth';
+import { ref } from 'vue'
+import useAuth from '@/store/auth'
 import router from '@/router'
+import Swal from 'sweetalert2'
 
 const store = useAuth();
 const name = ref('');
 const email = ref('');
 const password = ref('');
 const feedback = ref('');
+const valid = ref(false);
 
 const createUser = async () => {
+  feedback.value = ''
+
+  if(!valid.value) {
+        return
+    }
   try {
     feedback.value = 'Sending...'
   const response = await store.register(name.value, email.value, password.value)
@@ -39,6 +46,13 @@ const createUser = async () => {
   if (response == false) {
     feedback.value = 'Error'
   } else {
+    Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "successful register",
+        showConfirmButton: false,
+        timer: 1500
+      });
     const userId = await store.getUserId();
     router.push({ name: 'tasks', params: { id: userId } })
   }
