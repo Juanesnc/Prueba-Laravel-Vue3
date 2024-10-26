@@ -1,58 +1,71 @@
 <template>
-    <div class="modal-overlay" @click.self="close">
-        <div class="modal-text">
-            <h1 class="modal-title">Update</h1>
-            <form class="form">
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="text" class="form-control" id="exampleInputName" aria-describedby="nameHelp"
-                        :placeholder="task.name" v-model="title">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="text" class="form-control" aria-describedby="nameHelp"
-                        placeholder="Enter name" v-model="description">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="date" class="form-control" aria-describedby="nameHelp"
-                        placeholder="Enter name" v-model="due_date">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputResponsible">responsible</label>
-                    <select v-model="selectedCompany" class="form-control">
-                        <option v-for="company in companies" :key="company.id" :value="company.name">{{ company.name }}</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputStatus">Status</label>
-                        <select v-model="status" class="form-control" :placeholder="task.status">
-                            <option value="pending">pending</option>
-                            <option value="in_progress">in_progress</option>
-                            <option value="finalized">finalized</option>
-                        </select>
-                </div>
-                <button type="submit" class="btn btn-primary"
-                    @click.prevent="updateTask(taskId, task.title, task.description, task.due_date, task.company, task.status)">Submit</button>
-                <p class="feedback">{{ feedback }}</p>
-            </form>
-        </div>
-    </div>
+    <v-dialog class="container" v-model="isDialogOpen" persistent>
+        <v-card>
+            <v-card-title>
+                <h1 class="modal-title">Update</h1>
+            </v-card-title>
+            <v-card-text>
+                <v-container>
+                    <v-row>
+                        <v-col cols="12" md="6">
+                            <v-text-field v-model="title" label="Task Name"
+                                placeholder="Enter task name"></v-text-field>
+
+                            <v-text-field v-model="description" label="Description"
+                                placeholder="Enter description"></v-text-field>
+
+                            <v-text-field v-model="due_date" label="Due date" placeholder="Enter due date" type="date"></v-text-field>
+
+                            <!-- <v-menu v-model="menu" close-on-content-click offset-y>
+                                <template v-slot:activator="{ props }">
+                                    <v-text-field v-bind="props" v-model="due_date"  label="Due date" prepend-icon="date" ></v-text-field>
+                                    <v-date-picker v-model="due_date" @change="closeMenu" :min="minDate" locale="es"></v-date-picker>
+                                </template>
+</v-menu> -->
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <v-select v-model="selectedCompany" :items="cleanCompanies" label="Responsible"
+                                placeholder="Select a company"></v-select>
+
+                            <v-select v-model="status" :items="statusOptions" label="Status"
+                                placeholder="Select a status"></v-select>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="blue darken-1"
+                    @click.prevent="updateTask(taskId, task.title, task.description, task.due_date, task.company_id, task.status)">Update</v-btn>
+                <v-btn text @click="close">Cancel</v-btn>
+            </v-card-actions>
+            <p class="feedback">{{ feedback }}</p>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, onMounted } from 'vue';
+import { ref, computed, defineProps, defineEmits, onMounted } from 'vue';
 import useAuth from '@/store/auth';
 
 const store = useAuth();
 const title = ref('');
-const description = ref(''); 
+const description = ref('');
 const due_date = ref('');
 const selectedCompany = ref('');
+const statusOptions = ['pending', 'in_progress', 'finalized'];
 const companies = ref([]);
 const idCompany = ref('');
 const status = ref('');
 const feedback = ref('');
+const isDialogOpen = ref(true);
+
+// const menu = ref(false)
+
+// const closeMenu = () => {
+//     menu.value = false
+// }
+
+// const minDate = new Date().toISOString().substring(0, 10)
 
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -69,6 +82,7 @@ const props = defineProps({
 const emits = defineEmits(['close', 'update'])
 
 const close = () => {
+    isDialogOpen.value = false
     emits('close')
     emits('update')
 }
@@ -86,6 +100,7 @@ const updateTask = async (taskId, titleUpdate, descriptionUpdate, due_dateUpdate
     }
     if (selectedCompany.value !== '') {
         idCompany.value = await store.getCompanyId(selectedCompany.value)
+        idCompany.value = idCompany.value.id
     } else {
         idCompany.value = companyUpdate
     }
@@ -93,7 +108,7 @@ const updateTask = async (taskId, titleUpdate, descriptionUpdate, due_dateUpdate
         status.value = statusUpdate
     }
 
-    const response = await store.updateTask(taskId, title.value, description.value, due_date.value, idCompany.value.id, status.value)
+    const response = await store.updateTask(taskId, title.value, description.value, due_date.value, idCompany.value, status.value)
 
     if (response == false) {
         feedback.value = 'Update error'
@@ -103,81 +118,50 @@ const updateTask = async (taskId, titleUpdate, descriptionUpdate, due_dateUpdate
 }
 
 onMounted(async () => {
-    companies.value = await store.fetchCompanies()
+    const companyData = await store.fetchCompanies()
+    companies.value = companyData.map(company => ({
+        name: company.name
+    }))
 });
+
+const cleanCompanies = computed(() => companies.value.map(company => company.name));
 </script>
 
 <style scoped lang="scss">
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-text {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border: 3px solid #ddd;
-    border-radius: 5px;
-    padding: 20px;
-    max-width: 50%;
-    max-height: 80%;
-    background: white;
-    text-align: center;
-    cursor: default;
+.container {
+    max-width: 60%;
 }
 
 .modal-title {
-    font-size: 2rem;
+    font-size: 24px;
+    font-weight: bold;
+    color: #1976d2;
     margin-bottom: 20px;
 }
 
-.form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    align-items: center;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.form-control {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.btn {
-    padding: 10px 20px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover {
-    background-color: #0056b3;
-}
-
 .feedback {
-    margin-top: 10px;
-    color: red;
+    margin-top: 20px;
+    color: #f44336;
+    font-weight: bold;
+}
+
+.v-container {
+    padding: 16px;
+}
+
+.v-col {
+    margin-bottom: 16px
+}
+
+.v-btn {
+    font-size: 16px;
+}
+
+.v-text-field {
+    margin-bottom: 16px;
+}
+
+.v-select {
+    margin-bottom: 16px;
 }
 </style>

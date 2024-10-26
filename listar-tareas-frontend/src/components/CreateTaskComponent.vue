@@ -1,68 +1,70 @@
 <template>
-    <div class="modal-overlay" @click.self="close">
-        <div class="modal-text">
-            <h1 class="modal-title">Create</h1>
-            <form class="form">
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="text" class="form-control" aria-describedby="nameHelp"
-                        placeholder="Enter name" v-model="title">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="text" class="form-control" aria-describedby="nameHelp"
-                        placeholder="Enter name" v-model="description">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputName">Task Name</label>
-                    <input type="date" class="form-control" aria-describedby="nameHelp"
-                        placeholder="Enter name" v-model="due_date">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputResponsible">responsible</label>
-                    <select v-model="selectedCompany" class="form-control">
-                        <option v-for="company in companies" :key="company.id" :value="company.name">{{ company.name }}</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" @click.prevent="createTask">Submit</button>
+    <v-dialog v-model="isDialogOpen" persistent>
+        <v-card>
+            <v-card-title>
+                <h1 class="modal-title">Create</h1>
+            </v-card-title>
+            <v-card-text>
+                <v-form ref="form" v-model="valid">
+                    <v-text-field v-model="title" label="Task Title" placeholder="Enter task name"
+                        :rules="[v => !!v || 'Task name is required']"></v-text-field>
+
+                    <v-text-field v-model="description" label="Description" placeholder="Enter description"
+                        :rules="[v => !!v || 'Description is required']"></v-text-field>
+
+                    <v-text-field v-model="due_date" label="Due date" placeholder="Enter due date" type="date"
+                        :rules="[v => !!v || 'Due date is required']"></v-text-field>
+
+                    <v-select v-model="selectedCompany" :items="cleanCompanies" label="Responsible"
+                        placeholder="Select a company"></v-select>
+                </v-form>
+                <v-btn type="submit" class="primary" @click.prevent="createTask">Submit</v-btn>
+                <v-btn text @click="close">Cancel</v-btn>
                 <p class="feedback">{{ feedback }}</p>
-            </form>
-        </div>
-    </div>
+            </v-card-text>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup>
-import { ref, defineEmits, onMounted } from 'vue';
+import { ref, computed, defineEmits, onMounted } from 'vue';
 import useAuth from '@/store/auth';
 
 const store = useAuth();
 const title = ref('');
-const description = ref(''); 
+const description = ref('');
 const due_date = ref('');
 const selectedCompany = ref('');
 const feedback = ref('');
 const companies = ref([]);
+const isDialogOpen = ref(true);
 
 const emits = defineEmits(['close', 'update'])
 
 const close = () => {
+    isDialogOpen.value = false
     emits('update')
     emits('close')
 }
 
 const createTask = async () => {
     const idCompany = await store.getCompanyId(selectedCompany.value)
-    const response = await store.createTask(title.value, description.value, due_date.value, idCompany.id) 
-      if(response == false){
+    const response = await store.createTask(title.value, description.value, due_date.value, idCompany.id)
+    if (response == false) {
         feedback.value = 'Create error'
-      } else {
+    } else {
         close();
-      }
+    }
 }
 
 onMounted(async () => {
-    companies.value = await store.fetchCompanies()
+    const companyData = await store.fetchCompanies()
+    companies.value = companyData.map(company => ({
+        name: company.name
+    }))
 });
+
+const cleanCompanies = computed(() => companies.value.map(company => company.name));
 
 </script>
 

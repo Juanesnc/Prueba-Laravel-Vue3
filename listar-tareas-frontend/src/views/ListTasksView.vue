@@ -1,49 +1,74 @@
 <template>
-  <div class="container" v-show="showMessage">
-    <div class="title">
-      <h1 class="title-text">TaskList</h1>
-      <a @click.prevent="logout" class="logout-link">Logout</a>
-    </div>
-    <div class="filters">
-      <button @click="openModalCreate" class="btn btn-primary">Create</button>
-      <input type="text" v-model="filter.name" placeholder="Buscar Por Nombre..." class="form-control filter-input">
-      <select v-model="filter.status" class="form-control filter-select">
-        <option value="">Todos los estados</option>
-        <option value="pending">pending</option>
-        <option value="in_progress">in_progress</option>
-        <option value="finalized">finalized</option>
-      </select>
-      <button @click="filterTasks()" class="btn btn-secondary">Filtrar</button>
-    </div>
-    <table class="table table-striped" v-if="tasks.length > 0">
-      <thead>
-        <tr>
-          <th scope="col">Titulo</th>
-          <th scope="col">Descripcion</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Fecha de Asignacion</th>
-          <th scope="col">Compañia Encargada</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="task in tasks" :key="task.id">
-          <td>{{ task.title }}</td>
-          <td>{{ task.description }}</td>
-          <td>{{ task.status }}</td>
-          <td>{{ task.due_date }}</td>
-          <td>{{ task.company_id }}</td>
-          <td><button @click="openModalUpdate(task.id)" class="btn btn-warning">Update</button></td>
-          <td><button @click="deleteTask(task.id)" class="btn btn-danger">Delete</button></td>
+  <v-container class="container" fluid>
+    <v-row class="align-center justify-space-between my-3">
+      <v-col cols="4">
+        <h1 class="title-text">TaskList</h1>
+      </v-col>
+      <v-col cols="1" class="text-right">
+        <v-btn @click.prevent="logout" text color="red" class="logout-button">Logout</v-btn>
+      </v-col>
+    </v-row>
 
-          <UpdateTaskComponent v-if="showModalU" :task="task" :taskId="taskId" @close="closeModalUpdate()" @update="filterTasks()" />
-        </tr>
-      </tbody>
-    </table>
-    <p v-if="showMessage && tasks.length == 0">No data yet.</p>
-  </div>
+    <v-divider></v-divider>
+
+    <v-row class="align-center justify-center mb-4">
+      <v-col cols="12" md="1">
+        <v-btn @click="openModalCreate" color="blue">Create</v-btn>
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-text-field v-model="filter.name" label="Buscar Por Nombre..." outlined dense></v-text-field>
+      </v-col>
+      <v-col cols="12" md="2">
+        <v-select v-model="filter.status" :items="statusOptions" label="Todos los estados" outlined dense></v-select>
+      </v-col>
+      <v-col cols="12" md="2">
+        <v-text-field v-model="filter.due_date" label="Due date" placeholder="Enter due date" type="date"></v-text-field>
+      </v-col>
+      <v-col cols="12" md="1">
+        <v-btn @click="filterTasks()" color="secondary">Filtrar</v-btn>
+      </v-col>
+    </v-row>
+  </v-container>
+
+  <v-container class="containerList" v-show="showMessage">
+    <v-row v-if="tasks.length > 0">
+      <v-col>
+        <v-table class="database-table">
+          <thead>
+            <tr>
+              <th scope="col" class="text-center">Titulo</th>
+              <th scope="col" class="text-center">Descripcion</th>
+              <th scope="col" class="text-center">Estado</th>
+              <th scope="col" class="text-center">Fecha de Asignacion</th>
+              <th scope="col" class="text-center">Compañia Encargada</th>
+              <th scope="col" class="text-center" colspan="2">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="task in tasks" :key="task.id">
+              <td>{{ task.title }}</td>
+              <td class="description-cell">{{ task.description }}</td>
+              <td>{{ task.status }}</td>
+              <td>{{ task.due_date }}</td>
+              <td>{{ task.company_id }}</td>
+              <td><v-btn @click="openModalUpdate(task)" color="warning" text>Update</v-btn></td>
+              <td><v-btn @click="deleteTask(task.id)" color="danger" text>Delete</v-btn></td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-col>
+    </v-row>
+    <v-row else>
+      <v-col v-if="showMessage && tasks.length == 0">
+        <p>No data yet.</p>
+      </v-col>
+    </v-row>
+
+
+  </v-container>
   <CreateTaskComponent v-if="showModalC" @close="closeModalCreate" @update="filterTasks()" />
+  <UpdateTaskComponent v-if="showModalU" :task="selectedTask" :taskId="taskId" @close="closeModalUpdate()"
+    @update="filterTasks()" />
 </template>
 
 <script setup>
@@ -57,11 +82,13 @@ import UpdateTaskComponent from '@/components/UpdateTaskComponent.vue';
 const route = useRoute();
 const store = useAuth();
 const tasks = ref([]);
+const selectedTask = ref([]);
 const filter = ref({
   title: '',
   status: '',
   due_date: '',
 })
+const statusOptions = ['pending', 'in_progress', 'finalized'];
 const id = route.params.id;
 const taskId = ref('')
 
@@ -81,7 +108,8 @@ const openModalCreate = () => {
 }
 
 const openModalUpdate = (task) => {
-  taskId.value = task;
+  selectedTask.value = task;
+  taskId.value = task.id;
   showModalU.value = true;
 }
 
@@ -100,7 +128,15 @@ const deleteTask = async (idD) => {
 
 const filterTasks = async () => {
   tasks.value = await store.getTasks(id, filter.value.title, filter.value.status, filter.value.due_date);
+  filter.value.title = '';
+  filter.value.status = '';
+  filter.value.due_date = '';
 }
+
+// const setDate = (date) => {
+//   filter.value.due_date = new Date(date)
+//   menu.value = false
+// }
 
 const logout = () => {
   store.logout()
@@ -110,101 +146,95 @@ const logout = () => {
 
 <style scoped lang="scss">
 .container {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  border: 3px solid $borderImage;
-  border-radius: 5px;
-  padding: 20px;
-  position: relative;
-  min-width: 40%;
-  min-height: 80%;
   max-width: 80%;
-  max-height: 90%;
-  background: $backGroundModal;
-  text-align: center;
-  cursor: default;
+  max-height: 80%;
+  margin: 2% auto;
+  margin-bottom: 0;
+
+  background-color: white !important;
+  border: 1.5px solid $borderImage;
+  border-radius: 5px;
+  position: relative;
+  padding: 3rem;
+  filter: drop-shadow(2px 2px 20px rgb(61, 60, 60));
 }
 
+.containerList {
+  max-width: 80%;
+  max-height: 80%;
+  margin: 0.5% auto;
+
+  background-color: #f5f5f5 !important;
+  border: 1.5px solid $borderImage;
+  border-radius: 5px;
+  position: relative;
+  filter: drop-shadow(2px 2px 20px rgb(61, 60, 60));
+}
+
+.v-row>.v-col {
+  margin: 0 10px;
+  justify-content: center;
+}
+
+.description-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.logout-button {
+  background-color: #f44336;
+  color: white;
+}
+
+.logout-button:hover {
+  opacity: 0.9;
+}
+
+.v-btn {
+  margin: auto;
+  margin-top: -10px;
+}
+
+.v-divider {
+  margin: 20px 0;
+}
+
+.div {
   width: 100%;
-  margin-top: 20px;
-  position: relative;
 }
 
-.title-text {
-  font-size: 10rem;
-  margin: 0;
+.filters .v-col {
+  margin-bottom: 10px;
 }
 
-.logout-link {
-  position: absolute;
-  right: 20px;
-  background-color: transparent;
-  border: none;
-  color: #007bff;
-  text-decoration: none;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.logout-link:hover {
-  color: #0056b3;
-}
-
-.filters {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.database-table {
+  border-collapse: collapse;
   width: 100%;
-  margin-bottom: 20px;
 }
 
-.filter-input, .filter-select {
-  margin-right: 10px;
+.database-table th,
+.database-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
 }
 
-.table {
-  width: 100%;
-  margin-top: 20px;
+.database-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
 }
 
-.btn {
-  margin-right: 10px;
+.database-table tr:hover {
+  background-color: #f1f1f1;
 }
 
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-}
-
-.btn-warning {
-  background-color: #ffc107;
-  border-color: #ffc107;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  background-color: #dc3545;
-}
-
-.btn-primary:hover, .btn-secondary:hover,
-.btn-warning:hover, .btn-danger:hover {
-  opacity: 0.8;
-}
-
-.message-error {
-  padding-top: 10px;
+.text-center {
+  text-align: center;
 }
 </style>

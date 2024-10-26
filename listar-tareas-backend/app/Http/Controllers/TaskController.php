@@ -24,6 +24,10 @@ class TaskController extends Controller
         if($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
+
+        if($request->filled('due_date')) {
+            $query->where('due_date', $request->input('due_date'));
+        }
         
         $tasks = $query->get();
 

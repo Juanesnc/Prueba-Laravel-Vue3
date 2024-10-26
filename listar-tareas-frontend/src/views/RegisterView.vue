@@ -1,28 +1,23 @@
 <template>
-  <div class="container">
-    <div class="modal-text">
-      <RouterLink :to="{ name: 'login' }" class="link">Login</RouterLink><br>
-      <h1 class="title">Register</h1>
-      <form class="form-style">
-        <div class="form-group">
-          <label for="exampleInputName">User Name</label>
-          <input type="text" class="form-control input-box" id="exampleInputName" placeholder="Enter user name" v-model="name" required>
+  <v-container fluid fill-height>
+    <v-row justify="center" align="center" style="height: 100vh;">
+      <v-col cols="12" sm="6">
+        <div class="modal-text">
+          <h1 class="title">Register</h1>
+          <v-form @submit.prevent="createUser">
+            <v-text-field v-model="name" label="User name" placeholder="Enter user name" requied outlined>
+            </v-text-field>
+            <v-text-field v-model="email" label="Email address" placeholder="Enter email"  required>
+            </v-text-field>
+            <v-text-field v-model="password" label="Password" placeholder="Password" required>
+            </v-text-field>
+            <v-btn type="submit">Submit</v-btn>
+            <p class="message-error">{{ feedback }}</p>
+          </v-form>
         </div>
-        <div class="form-group">
-          <label for="exampleInputEmail1">Email address</label>
-          <input type="email" class="form-control input-box" id="exampleInputEmail1" aria-describedby="emailHelp"
-            placeholder="Enter email" v-model="email" required>
-        </div>
-        <div class="form-group">
-          <label for="exampleInputPassword1">Password</label>
-          <input type="password" class="form-control input-box" id="exampleInputPassword1" placeholder="Password"
-            v-model="password" required>
-        </div>
-        <button type="submit" class="btn button-form" @click.prevent="createUser">Submit</button>
-      </form>
-      <p class="message-error">{{ feedback }}</p>
-    </div>
-  </div>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
@@ -55,48 +50,22 @@ const createUser = async () => {
 </script>
 
 <style scoped lang="scss">
-.container {
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  color: $textColor;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .modal-text {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  border: 1px solid $borderImage;
+  border: 1.5px solid $borderImage;
   border-radius: 5px;
-  padding: 20px;
+  padding: 3rem;
   position: relative;
-  min-width: 40%;
-  min-height: 30%;
-  max-width: 50%;
-  max-height: 80%;
   background: $backGroundModal;
   text-align: center;
+  max-width: 500px;
+  margin: auto;
+  min-width: 300px;
   cursor: default;
+  filter:drop-shadow(2px 2px 20px rgb(61, 60, 60));
 }
 
 .title {
   padding: 20px;
-}
-
-.form-style {
-  flex-direction: column;
-  padding: 10px;
-}
-
-.input-box {
-  background-color: $colorBox;
-  border-radius: 8px;
-  border: 1px solid $borderImage;
 }
 
 .button-form {

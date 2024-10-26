@@ -75,10 +75,11 @@ const useAuth = defineStore('auth', {
                 throw error;
             }
         },
-        async getTasks(id, name, status) {
+        async getTasks(id, name, status, due_date) {
             const queryParams = new URLSearchParams({
                 name: name,
-                status: status
+                status: status,
+                due_date: due_date
             })
             const uri = `${this.baseURL}/tasks/${id}?${queryParams}`
             const rawResponse = await fetch(uri, {
