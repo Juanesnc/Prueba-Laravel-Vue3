@@ -17,8 +17,9 @@ class TaskController extends Controller
     {
         $query = Task::with('company')->where('user_id', $id)->where('soft_delete', 0);
 
-        if($request->filled('name')){
-            $query->where('name', 'like', '%' . $request->input('name') . '%');
+        Log::info($request);
+        if($request->filled('title')){
+            $query->where('title', 'like', '%' . $request->input('title') . '%');
         }
 
         if($request->filled('status')) {

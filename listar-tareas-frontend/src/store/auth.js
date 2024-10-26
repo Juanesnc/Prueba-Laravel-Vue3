@@ -75,9 +75,9 @@ const useAuth = defineStore('auth', {
                 throw error;
             }
         },
-        async getTasks(id, name, status, due_date) {
+        async getTasks(id, title, status, due_date) {
             const queryParams = new URLSearchParams({
-                name: name,
+                title: title,
                 status: status,
                 due_date: due_date
             })
